@@ -94,7 +94,6 @@ function initAutocomplete() {
 
   var markers = [];
   searchBox.addListener('places_changed', function() {
-    alert('places_changed');
     var places = searchBox.getPlaces();
 
     if (places.length == 0) {
