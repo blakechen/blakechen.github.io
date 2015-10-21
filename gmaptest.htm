@@ -32,6 +32,13 @@
   text-overflow: ellipsis;
   width: 300px;
 }
+#searchbutton {
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 11 11px 11 13px;
+}
 
 #pac-input:focus {
   border-color: #4d90fe;
@@ -63,31 +70,35 @@
   </head>
   <body>
     <input id="pac-input" class="controls" type="text" placeholder="請輸入您所在地的地址">
+    <button id="searchbutton" type="button">送出</button>
     <div id="map"></div>
     <script>
-var banks = [
-  ['站前分行', 25.045734, 121.518514, '臺北市100中正區忠孝西路一段4號1樓'],
-  ['萬華分行', 25.0403312, 121.5047973, '臺北市108萬華區長沙街二段92號1樓'],
-  ['石牌分行', 25.115781, 121.515852, '臺北市112北投區石牌路二段46號1樓'],
-  ['敦北分行', 25.0539849, 121.548513, '臺北市105松山區敦化北路122號1樓'],
-  ['東民生分行', 25.0582379, 121.540197, '臺北市104中山區民生東路三段51號1樓']
-];
-
+var bankjson='{"banks":[' +
+  '{"name":"站前分行","lat":25.045734,"lng":121.518514,"addr":"臺北市100中正區忠孝西路一段4號1樓"},' +
+  '{"name":"萬華分行","lat":25.0403312,"lng":121.5047973,"addr":"臺北市108萬華區長沙街二段92號1樓"},' +
+  '{"name":"石牌分行","lat":25.115781,"lng":121.515852,"addr":"臺北市112北投區石牌路二段46號1樓"},' +
+  '{"name":"敦北分行","lat":25.0539849,"lng":121.548513,"addr":"臺北市105松山區敦化北路122號1樓"}]}';
+var banks = JSON.parse(bankjson);
 function initAutocomplete() {
-  var map = new google.maps.Map(document.getElementById('map'), {
+    var input = document.getElementById('pac-input');
+    var button = document.getElementById('searchbutton');
+    var searchBox = new google.maps.places.SearchBox(input);
+    var map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: 23.7667, lng: 121.0000 },
     zoom: 8,
     streetViewControl: false,
     mapTypeControl: false,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   });
-
-  // Create the search box and link it to the UI element.
-  var input = document.getElementById('pac-input');
-  var searchBox = new google.maps.places.SearchBox(input);
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(button);
+  button.onclick = function(){
+    google.maps.event.trigger(input, 'focus');
+    google.maps.event.trigger(input, 'keydown', {
+        keyCode: 13
+    });
+  };
 
-  // Bias the SearchBox results towards current map's viewport.
   map.addListener('bounds_changed', function() {
     searchBox.setBounds(map.getBounds());
   });
@@ -118,27 +129,23 @@ function initAutocomplete() {
       }
     });
     map.fitBounds(bounds);
+    // map.setZoom(18);
   });
 }
 
 function setMarkers(map,banks){
   var marker, i;
-  var icon = {
-    url: 'https://www.ctbcbank.com/favicon.ico',
-    size: new google.maps.Size(71, 71),
-    origin: new google.maps.Point(0, 0),
-    anchor: new google.maps.Point(17, 34),
-    // scaledSize: new google.maps.Size(25, 25)
-  };
-  for (i = 0; i < banks.length; i++) {
-    var bank=banks[i];
+
+  var myIcon = new google.maps.MarkerImage("https://www.ctbcbank.com/favicon.ico", null, null, null, new google.maps.Size(30,30));
+  for (i = 0; i < banks.banks.length; i++) {
+    var bank=banks.banks[i];
     var marker = new google.maps.Marker({  
       map: map, 
-      title: bank[0], 
-     // icon: icon,
-      position: {lat: bank[1], lng: bank[2]},
+      title: bank.name, 
+      icon: myIcon,
+      position: {lat: bank.lat, lng: bank.lng},
     });
-    var content=bank[0]+'<br>'+bank[3];
+    var content=bank.name+'<br>'+bank.addr;
     var infowindow = new google.maps.InfoWindow();
 
     google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
@@ -149,6 +156,7 @@ function setMarkers(map,banks){
      })(marker,content,infowindow)); 
   }
 }
+
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places&callback=initAutocomplete"></script>
   </body>
